@@ -104,8 +104,18 @@ gulp serve-dev || gulp serve-dev --nosync
 
 
 // Features
-angular template caching via gulp-angular-templatecache
+angular template caching via gulp-angular
+// useref plugin to slim down script tags to single script tag for dist version
+// gulp-useref API
 
+1. .pipe($.useref.assets())
+// gets assets from <!-- -->
+
+2. .pipe($.useref.assets.restore())
+// restores files back in stream
+
+3. .pipe($.useref())
+// concatenates files, writes to index.html
 
 
 

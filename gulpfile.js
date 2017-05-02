@@ -119,7 +119,7 @@ gulp.task('wiredep', function() {
 });
 
 // injects styles separately from js
-gulp.task('inject', ['wiredep', 'styles'], function() {
+gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
     log('Wire up the bower css js and app js into index.html');
 
     return gulp
@@ -127,6 +127,24 @@ gulp.task('inject', ['wiredep', 'styles'], function() {
         .pipe($.inject(gulp.src(config.css)))
         .pipe(gulp.dest(config.client));
 });
+
+// Build Pipeline
+gulp.task('optimize', ['inject'], function() {
+    log('Optimize all files');
+
+    var assets = $.useref.assets({searchPath: './'}); // gather script assets between tags
+    var templateCache = config.temp + config.templateCache.file;
+
+    return gulp
+        .src(config.index)
+        .pipe($.plumber())
+        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} )) // arg1 inject templateCache into html, arg2 read false, arg3 waht tag to look for in index.html
+        .pipe(assets)
+        .pipe(assets.restore()) // get index.html back
+        .pipe(gulp.dest(config.dist));
+});
+
+
 
 // Dev server
 gulp.task('serve-dev', ['inject'], function() {
