@@ -36,19 +36,43 @@ gulp.task('styles', ['clean-styles'], function(){
 });
 
 // grab fonts and put in dist folder
-gulp.task('fonts', function() {
+gulp.task('fonts', ['clean-fonts'], function() {
     log('Copying fonts...');
 
     return gulp.src(config.fonts)
         .pipe(gulp.dest(config.dist + 'fonts'));
 });
 
+
+// minify images
+gulp.task('images', ['clean-images'], function() {
+   log('Copying and compressing images');
+
+   return gulp
+    .src(config.images)
+    .pipe($.imagemin({optimizationLevel: 4}))
+    .pipe(gulp.dest(config.dist + 'images'));
+});
+
+
+// clean all
+gulp.task('clean', function(done) {
+    var delconfig = [].concat(config.dist, config.temp); // like push on steroids
+    log('Cleaning: ' + $.util.colors.bgRed.white(delconfig));
+    del(delconfig, done);
+});
+
 // done arg is a callback that makes tasks run in sync
-    // node package 'del', deletes
-    // del( files ); // npm install --save-dev del
 gulp.task('clean-styles', function(done) {
-    var files = config.temp + '**/*.css';
-    clean(files, done);
+    clean(config.temp + '**/*.css', done);
+});
+// prebuild clean fonts
+gulp.task('clean-fonts', function(done) {
+    clean(config.dist + 'fonts/**/*.*', done);
+});
+// prebuild clean images
+gulp.task('clean-images', function(done) {
+    clean(config.dist + 'images/**/*.*', done);
 });
 
 gulp.task('less-watcher', function() {
@@ -79,8 +103,7 @@ gulp.task('inject', ['wiredep', 'styles'], function() {
         .pipe(gulp.dest(config.client));
 });
 
-// server
-
+// Dev server
 gulp.task('serve-dev', ['inject'], function() {
     var isDev = true;
 
