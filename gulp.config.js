@@ -19,6 +19,7 @@ module.exports = function() {
         css: temp + 'styles.css',
         dist: './dist/',
         fonts: './bower_components/font-awesome/fonts/**/*.*',
+        htmltemplates: clientApp + '**/*.html',
         images: client + 'images/**/*.*',
         index: client + 'index.html',
         js: [
@@ -31,6 +32,21 @@ module.exports = function() {
         server: server,
         temp: temp,
 
+        /*
+         *  Template Cache
+         */
+        templateCache: {
+            file: 'templates.js',
+            options: {
+                module: 'app.core', // angular module
+                standAlone: false, // new module - true
+                root: 'app/' // strip off extra URL params
+            }
+        },
+
+        /*
+         *  browser sync
+         */
         browserReloadDelay: 1000,
 
         /*

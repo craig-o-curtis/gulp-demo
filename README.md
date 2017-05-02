@@ -103,6 +103,11 @@ gulp serve-dev || gulp serve-dev --nosync
 ```
 
 
+// Features
+angular template caching via gulp-angular-templatecache
+
+
+
 
 
 

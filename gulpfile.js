@@ -75,8 +75,33 @@ gulp.task('clean-images', function(done) {
     clean(config.dist + 'images/**/*.*', done);
 });
 
+// clean templates
+gulp.task('clean-code', function(done){
+    var files = [].concat(
+        config.temp + '**/*.js',
+        config.dist + '**/*.html',
+        config.dist + 'js/**/*.js'
+    );
+    clean(files, done);
+});
+
+
 gulp.task('less-watcher', function() {
     gulp.watch([config.less], ['styles']);
+});
+
+gulp.task('templatecache', ['clean-code'], function(){
+    log('Creating AngularJS $templateCache');
+
+    return gulp
+        .src(config.htmltemplates)
+        .pipe($.htmlmin({collapseWhitespace: true, empty: true}))
+        .pipe($.angularTemplatecache(
+            // name of file to create
+            config.templateCache.file,
+            config.templateCache.options
+        ))
+        .pipe(gulp.dest(config.temp));
 });
 
 // HTML injection = HoT MeatLoaf injection
