@@ -152,15 +152,16 @@ gulp.task('optimize', ['inject'], function() {
 
     var assets = $.useref.assets({searchPath: './'}); // gather assets from <!-- -->
     var templateCache = config.temp + config.templateCache.file;
+    var cssFilter = $.filter('**/*.css', {restore: true});
 
     return gulp
         .src(config.index)
         .pipe($.plumber()) // error handling
         .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} )) // inject template.js into index.html
-        .pipe(assets) // get js and css files from <!-- -->
-        // filter down to css
-        // csoo
-        // filter restore
+        .pipe(assets) // get js and css files from <!-- build:* --><!-- endbuild -->
+        .pipe(cssFilter) // filter down to css
+        .pipe($.csso()) // csso
+        .pipe(cssFilter.restore) // filter restore to get all files back
         .pipe(assets.restore()) // get index.html back
         .pipe($.useref()) // replaces with one-liners for app.* and lib.* assets
         .pipe(gulp.dest(config.dist));
