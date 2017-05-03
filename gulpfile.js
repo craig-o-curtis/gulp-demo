@@ -138,9 +138,10 @@ gulp.task('optimize', ['inject'], function() {
     return gulp
         .src(config.index)
         .pipe($.plumber())
-        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} )) // arg1 inject templateCache into html, arg2 read false, arg3 waht tag to look for in index.html
+        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} ))
         .pipe(assets)
-        .pipe(assets.restore()) // get index.html back
+        .pipe(assets.restore())
+        .pipe($.useref())
         .pipe(gulp.dest(config.dist));
 });
 
