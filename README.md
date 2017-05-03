@@ -117,6 +117,20 @@ angular template caching via gulp-angular
 3. .pipe($.useref())
 // concatenates files, writes to index.html
 
+// build / dist server
+$ gulp serve-build
+
+
+/** Minification & Optimization **/
+CSSO CSS Optimizer - removes whitespaces, comments, trailing semicolons, colors, 0, ...
+Uglify - minifies JS, removes whitespace & comments, mangles JS
+
+
+
+
+
+
+
 
 
 

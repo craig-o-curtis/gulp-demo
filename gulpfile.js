@@ -21,7 +21,9 @@ gulp.task('vet', function(){
         .pipe($.jshint.reporter('fail'));
 });
 
-// LESS -> css
+// styles = LESS -> css
+    // clean-styles = delate all temp css
+
     // last 2 versions, more than 5% of the market
     // .on('error', errorLogger) // old way, after less pipe
 gulp.task('styles', ['clean-styles'], function(){
@@ -62,7 +64,8 @@ gulp.task('clean', function(done) {
     del(delconfig, done);
 });
 
-// done arg is a callback that makes tasks run in sync
+// clean-styles = delate all temp css
+    // done arg is a callback that makes tasks run in sync
 gulp.task('clean-styles', function(done) {
     clean(config.temp + '**/*.css', done);
 });
@@ -75,8 +78,9 @@ gulp.task('clean-images', function(done) {
     clean(config.dist + 'images/**/*.*', done);
 });
 
-// clean templates
+// clean-code = delete all temp and dist html & js
 gulp.task('clean-code', function(done){
+    // better way to push to an array --- [].concat()
     var files = [].concat(
         config.temp + '**/*.js',
         config.dist + '**/*.html',
@@ -87,25 +91,29 @@ gulp.task('clean-code', function(done){
 
 
 gulp.task('less-watcher', function() {
+    // styles = LESS -> css
     gulp.watch([config.less], ['styles']);
 });
 
-// create templatecache list and inject into tags
+// templatecache = create templatecache list and prep to inject into tags
+    // clean-code = delete all temp and dist html & js
+
+    // reduce HTTP calls for templates
+    // first clear out code from .tmp and dist
 gulp.task('templatecache', ['clean-code'], function(){
     log('Creating AngularJS $templateCache');
 
     return gulp
-        .src(config.htmltemplates)
-        .pipe($.htmlmin({collapseWhitespace: true, empty: true}))
-        .pipe($.angularTemplatecache(
-            // name of file to create
-            config.templateCache.file,
-            config.templateCache.options
+        .src(config.htmltemplates) // grab all html dir template files
+        .pipe($.htmlmin({collapseWhitespace: true, empty: true})) // minify
+        .pipe($.angularTemplatecache( //
+            config.templateCache.file, // specify name of file to create - 'templates.js'
+            config.templateCache.options // tell gulp to go look for app.core angular module
         ))
         .pipe(gulp.dest(config.temp));
 });
 
-// HTML injection between <!-- inject:js --><!-- endinject -->
+// wiredep = HTML injection between <!-- inject:js --><!-- endinject -->
 gulp.task('wiredep', function() {
     log('Wire up the bower css js and app js into index.html');
 
@@ -119,7 +127,10 @@ gulp.task('wiredep', function() {
         .pipe(gulp.dest(config.client));
 });
 
-// injects styles separately from js, <!-- inject:css --><!-- endinject -->
+// inject = injects <!-- inject:css --><!-- endinject -->
+    // wiredep = HTML injection between <!-- inject:js --><!-- endinject -->
+    // styles = LESS -> css
+    // templatecache = create templatecache list and prep to inject into tags
 gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
     log('Wire up the bower css js and app js into index.html');
 
@@ -130,6 +141,8 @@ gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
 });
 
 // Build Pipeline, injects lib and app both css and js between: \
+    // inject = injects <!-- inject:css --><!-- endinject -->
+
     // <!-- build:css styles/lib.css --><!-- endbuild -->
     // <!-- build:css styles/app.css --><!-- endbuild -->
     // <!-- build:js js/lib.js --><!-- endbuild -->
@@ -137,16 +150,19 @@ gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
 gulp.task('optimize', ['inject'], function() {
     log('Optimize all files');
 
-    var assets = $.useref.assets({searchPath: './'}); // gather script assets between tags
+    var assets = $.useref.assets({searchPath: './'}); // gather assets from <!-- -->
     var templateCache = config.temp + config.templateCache.file;
 
     return gulp
         .src(config.index)
-        .pipe($.plumber())
-        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} ))
-        .pipe(assets)
-        .pipe(assets.restore())
-        .pipe($.useref())
+        .pipe($.plumber()) // error handling
+        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} )) // inject template.js into index.html
+        .pipe(assets) // get js and css files from <!-- -->
+        // filter down to css
+        // csoo
+        // filter restore
+        .pipe(assets.restore()) // get index.html back
+        .pipe($.useref()) // replaces with one-liners for app.* and lib.* assets
         .pipe(gulp.dest(config.dist));
 });
 
@@ -156,6 +172,7 @@ gulp.task('serve-build', ['optimize'], function(){
 });
 
 // Dev server
+    // inject = injects <!-- inject:css --><!-- endinject -->
 gulp.task('serve-dev', ['inject'], function() {
     serve(true);
 });
@@ -216,12 +233,13 @@ function startBrowserSync(isDev) {
     log('Starting browser-sync on port ' + port);
 
     if (isDev) {
-        // internal watch less files,
-
+        // internally watch less files
+            // watcher in option.files; watch less here, all others below
+        // styles = LESS -> css
         gulp.watch([config.less], ['styles'])
             .on('change', function(event){ changeEvent(event); });
     } else {
-
+        // build get app.* lib.* **.html
         gulp.watch([config.less, config.js, config.html], ['optimize', browserSync.reload]) // build mode, optimize first then reload
             .on('change', function(event){ changeEvent(event); });
     }
@@ -234,6 +252,7 @@ function startBrowserSync(isDev) {
             '!' + config.less,
             config.temp + '**/*.css'
         ] : [],
+        // synced action between browsers
         ghostMode: {
             clicks: true,
             location: false,
