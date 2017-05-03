@@ -90,6 +90,7 @@ gulp.task('less-watcher', function() {
     gulp.watch([config.less], ['styles']);
 });
 
+// create templatecache list and inject into tags
 gulp.task('templatecache', ['clean-code'], function(){
     log('Creating AngularJS $templateCache');
 
@@ -104,7 +105,7 @@ gulp.task('templatecache', ['clean-code'], function(){
         .pipe(gulp.dest(config.temp));
 });
 
-// HTML injection = HoT MeatLoaf injection
+// HTML injection between <!-- inject:js --><!-- endinject -->
 gulp.task('wiredep', function() {
     log('Wire up the bower css js and app js into index.html');
 
@@ -118,7 +119,7 @@ gulp.task('wiredep', function() {
         .pipe(gulp.dest(config.client));
 });
 
-// injects styles separately from js
+// injects styles separately from js, <!-- inject:css --><!-- endinject -->
 gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
     log('Wire up the bower css js and app js into index.html');
 
@@ -128,7 +129,11 @@ gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
         .pipe(gulp.dest(config.client));
 });
 
-// Build Pipeline
+// Build Pipeline, injects lib and app both css and js between: \
+    // <!-- build:css styles/lib.css --><!-- endbuild -->
+    // <!-- build:css styles/app.css --><!-- endbuild -->
+    // <!-- build:js js/lib.js --><!-- endbuild -->
+    // <!-- build:js js/app.js --><!-- endbuild -->
 gulp.task('optimize', ['inject'], function() {
     log('Optimize all files');
 
@@ -145,18 +150,25 @@ gulp.task('optimize', ['inject'], function() {
         .pipe(gulp.dest(config.dist));
 });
 
-
+// dist server
+gulp.task('serve-build', ['optimize'], function(){
+    serve(false);
+});
 
 // Dev server
 gulp.task('serve-dev', ['inject'], function() {
-    var isDev = true;
+    serve(true);
+});
 
+//////////////
+
+function serve(isDev) {
     var nodeOptions = {
         script: config.nodeServer, // path to src/server/app.js
         delayTime: 1,
         env: {
             'PORT': port,
-            'NODE_ENV': isDev ? 'dev' : 'build'
+            'NODE_ENV': isDev ? 'dev' : 'dist'
         },
         watch: [config.server] // files to restart
     };
@@ -176,7 +188,7 @@ gulp.task('serve-dev', ['inject'], function() {
         })
         .on('start', function() {
             log('** nodemon started **');
-            startBrowserSync();
+            startBrowserSync(isDev);
         })
         .on('crash', function() {
             log('** nodemon crashed **');
@@ -184,9 +196,8 @@ gulp.task('serve-dev', ['inject'], function() {
         .on('exit', function() {
             log('** nodemon exited **');
         });
-});
+}
 
-//////////////
 function changeEvent(event) {
     var srcPattern = new RegExp('/.*(?=/' + config.source + ')/');
     // event.type == added / changed / deleted
@@ -194,7 +205,7 @@ function changeEvent(event) {
 }
 
 
-function startBrowserSync() {
+function startBrowserSync(isDev) {
     // check to see if already running
     // if pass in --nosync as arg, then returns
     // ex; $ gulp serve-dev --nosync
@@ -204,18 +215,25 @@ function startBrowserSync() {
 
     log('Starting browser-sync on port ' + port);
 
-    // internal watch less files,
-    gulp.watch([config.less], ['styles'])
-        .on('change', function(event){ changeEvent(event); });
+    if (isDev) {
+        // internal watch less files,
+
+        gulp.watch([config.less], ['styles'])
+            .on('change', function(event){ changeEvent(event); });
+    } else {
+
+        gulp.watch([config.less, config.js, config.html], ['optimize', browserSync.reload]) // build mode, optimize first then reload
+            .on('change', function(event){ changeEvent(event); });
+    }
 
     var options = {
         proxy: 'localhost:' + port,
         port: 3000,
-        files: [
+        files: isDev ? [ // watches files for bs in dev mode
             config.client + '**/*.*',
             '!' + config.less,
             config.temp + '**/*.css'
-        ],
+        ] : [],
         ghostMode: {
             clicks: true,
             location: false,

@@ -19,6 +19,7 @@ module.exports = function() {
         css: temp + 'styles.css',
         dist: './dist/',
         fonts: './bower_components/font-awesome/fonts/**/*.*',
+        html: clientApp + '**/*.html',
         htmltemplates: clientApp + '**/*.html',
         images: client + 'images/**/*.*',
         index: client + 'index.html',
