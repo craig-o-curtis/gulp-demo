@@ -147,13 +147,14 @@ gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
     // <!-- build:css styles/app.css --><!-- endbuild -->
     // <!-- build:js js/lib.js --><!-- endbuild -->
     // <!-- build:js js/app.js --><!-- endbuild -->
-gulp.task('optimize', ['inject'], function() {
+gulp.task('optimize', ['inject', 'fonts', 'images'], function() {
     log('Optimize all files');
 
     var assets = $.useref.assets({searchPath: './'}); // gather assets from <!-- -->
     var templateCache = config.temp + config.templateCache.file;
     var cssFilter = $.filter('**/*.css', {restore: true});
-    var jsFilter = $.filter('**/*.js', {restore: true});
+    var jsLibFilter = $.filter('**/' + config.optimized.lib, {restore: true});
+    var jsAppFilter = $.filter('**/' + config.optimized.app, {restore: true});
 
     return gulp
         .src(config.index)
@@ -165,9 +166,14 @@ gulp.task('optimize', ['inject'], function() {
         .pipe($.csso()) // csso
         .pipe(cssFilter.restore) // filter restore to get all files back
 
-        .pipe(jsFilter) // filter down to js
+        .pipe(jsLibFilter) // filter down to js 3rd party libs
         .pipe($.uglify())
-        .pipe(jsFilter.restore) // restore files back
+        .pipe(jsLibFilter.restore) // restore lib files back
+
+        .pipe(jsAppFilter)
+        .pipe($.ngAnnotate())// optional instead of $inject or array literal to avoid minification var mangling
+        .pipe($.uglify())
+        .pipe(jsAppFilter.restore) // restore files back
 
         .pipe(assets.restore()) // get index.html back
         .pipe($.useref()) // replaces with one-liners for app.* and lib.* assets

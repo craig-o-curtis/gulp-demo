@@ -126,6 +126,11 @@ CSSO CSS Optimizer - removes whitespaces, comments, trailing semicolons, colors,
 Uglify - minifies JS, removes whitespace & comments, mangles JS
 
 
+/** ng-annotate **/
+// handles angular dependency injection - in case don't handle it 
+// write '/* @ngInject */' to specify DI -- ex: line 48 config.js
+
+
 
 
 
