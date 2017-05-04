@@ -94,12 +94,12 @@ ex:
 
 Help
 ```
-gulp || gulp help
+$ gulp || gulp help
 ```
 
 Serve
 ```
-gulp serve-dev || gulp serve-dev --nosync
+$ gulp serve-dev || gulp serve-dev --nosync
 ```
 
 
@@ -118,8 +118,9 @@ angular template caching via gulp-angular
 // concatenates files, writes to index.html
 
 // build / dist server
+```
 $ gulp serve-build
-
+```
 
 /** Minification & Optimization **/
 CSSO CSS Optimizer - removes whitespaces, comments, trailing semicolons, colors, 0, ...
@@ -129,6 +130,22 @@ Uglify - minifies JS, removes whitespace & comments, mangles JS
 /** ng-annotate **/
 // handles angular dependency injection - in case don't handle it 
 // write '/* @ngInject */' to specify DI -- ex: line 48 config.js
+
+/** gulp-rev / gulp-rev-replace**/
+/** fixing browser caching issues! **/
+// revise version numbers, for hashed file names
+
+/** rev-manifest.json **/
+// shows previous hashed version names
+
+/** automated version number bumping **/
+```
+$ gulp bump type=pre // *.*.*-x
+$ gulp bump type=patch // *.*.x
+$ gulp bump type=minor // *.x.*
+$ gulp bump type=major // x.*.*
+$ gulp bump version=1.2.3
+```
 
 
 
