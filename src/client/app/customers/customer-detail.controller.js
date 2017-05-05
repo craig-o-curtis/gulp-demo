@@ -30,6 +30,7 @@
         }
 
         function getCustomer(id) {
+            // id = 1017109; // get Karma tests to wrok
             return dataservice.getCustomer(id).then(function(data) {
                 vm.customer = data;
                 vm.original = angular.copy(vm.customer);

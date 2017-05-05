@@ -3,6 +3,8 @@ var args = require('yargs').argv; // npm install --save-dev yargs
 var browserSync = require('browser-sync');
 var config = require('./gulp.config')(); // ref to gulp.config.js module, then run it with ()
 var del = require('del'); // npm install --save-dev del
+var path = require('path'); // comes with node,  does path joining
+var _ = require('lodash');
 var $ = require('gulp-load-plugins')({lazy: true}); // only loads plugins that are being used!
 var port = process.env.PORT || config.defaultPort; // process.env.PORT - from command line
 
@@ -140,6 +142,19 @@ gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
         .pipe(gulp.dest(config.client));
 });
 
+gulp.task('build', ['optimize', 'images', 'fonts'], function() {
+    log('Building everything!');
+
+    var msg = {
+        title: 'gulp build',
+        subtitle: 'Deployed to the dist folder',
+        message: 'Running `gulp serve-build`'
+    };
+    del(config.temp);
+    log(msg);
+    notify(msg);
+});
+
 // Build Pipeline, injects lib and app both css and js between: \
     // inject = injects <!-- inject:css --><!-- endinject -->
 
@@ -147,7 +162,8 @@ gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
     // <!-- build:css styles/app.css --><!-- endbuild -->
     // <!-- build:js js/lib.js --><!-- endbuild -->
     // <!-- build:js js/app.js --><!-- endbuild -->
-gulp.task('optimize', ['inject', 'fonts', 'images'], function() {
+    // put 'test' task after 'inject'
+gulp.task('optimize', ['inject', 'test', 'fonts', 'images'], function() {
     log('Optimize all files');
 
     var assets = $.useref.assets({searchPath: './'}); // gather assets from <!-- -->
@@ -221,7 +237,7 @@ gulp.task('bump', function(){
 });
 
 // dist server
-gulp.task('serve-build', ['optimize'], function(){
+gulp.task('serve-build', ['build'], function(){
     serve(false);
 });
 
@@ -233,6 +249,10 @@ gulp.task('serve-dev', ['inject'], function() {
 
 gulp.task('test', ['vet', 'templatecache'], function(done) {
     startTests(true /* singleRun */, done);
+});
+
+gulp.task('autotest', ['vet', 'templatecache'], function(done){
+    startTests(false /* singleRun */, done);
 });
 
 //////////////
@@ -279,6 +299,16 @@ function changeEvent(event) {
     log('File ' + event.path.replace(srcPattern, '') + ' ' + event.type);
 }
 
+function notify(options) {
+    var notifier = require('node-notifier');
+    var notifyOptions = {
+        sound: 'Bottle',
+        contentImage: path.join(__dirname, 'gulp.png'),
+        icon: path.join(__dirname, 'gulp.png')
+    };
+    _.assign(notifyOptions, options);
+    notifier.notify(notifyOptions);
+}
 
 function startBrowserSync(isDev) {
     // check to see if already running
