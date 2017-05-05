@@ -99,7 +99,7 @@ module.exports = function() {
             ignorePath: config.bower.ignorePath
         };
         return options;
-    }
+    };
 
     config.karma = getKarmaOptions();
 

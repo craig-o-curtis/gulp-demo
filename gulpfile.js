@@ -159,7 +159,8 @@ gulp.task('optimize', ['inject', 'fonts', 'images'], function() {
     return gulp
         .src(config.index)
         .pipe($.plumber()) // error handling
-        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} )) // inject template.js into index.html
+        // inject template.js into index.html
+        .pipe($.inject(gulp.src(templateCache, {read: false}), {starttag: '<!-- inject:templates:js -->'} ))
         .pipe(assets) // get js and css files from <!-- build:* --><!-- endbuild -->
 
         .pipe(cssFilter) // filter down to css
@@ -205,7 +206,7 @@ gulp.task('bump', function(){
     var options = {};
 
     if (version) {
-        options.version = version
+        options.version = version;
         msg += ' to ' + version;
     } else {
         options.type = type;
@@ -230,7 +231,7 @@ gulp.task('serve-dev', ['inject'], function() {
     serve(true);
 });
 
-gulp.task('test', ['vet', 'templatecache'], function() {
+gulp.task('test', ['vet', 'templatecache'], function(done) {
     startTests(true /* singleRun */, done);
 });
 
@@ -297,7 +298,8 @@ function startBrowserSync(isDev) {
             .on('change', function(event){ changeEvent(event); });
     } else {
         // build get app.* lib.* **.html
-        gulp.watch([config.less, config.js, config.html], ['optimize', browserSync.reload]) // build mode, optimize first then reload
+        // build mode, optimize first then reload
+        gulp.watch([config.less, config.js, config.html], ['optimize', browserSync.reload])
             .on('change', function(event){ changeEvent(event); });
     }
 
@@ -322,14 +324,14 @@ function startBrowserSync(isDev) {
         logPrefix: 'gulp-patterns',
         notify: true,
         reloadDelay: 0
-    }
+    };
 
     browserSync(options);
 }
 
 // testing
 function startTests(singleRun, done) {
-    var karma = require('require').server;
+    var karma = require('karma').server;
     var excludeFiles = [];
     var serverSpecs = config.serverIntegrationSpecs;
 
