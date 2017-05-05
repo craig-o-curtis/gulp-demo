@@ -182,7 +182,7 @@ gulp.task('optimize', ['inject', 'fonts', 'images'], function() {
         .pipe($.useref()) // replaces with one-liners for app.* and lib.* assets
 
         .pipe($.revReplace()) // renames hashed names inside index.html
-        
+
         .pipe(gulp.dest(config.dist))
         .pipe($.rev.manifest()) // write namifest to keep track of hashed names
 
@@ -190,7 +190,7 @@ gulp.task('optimize', ['inject', 'fonts', 'images'], function() {
 });
 
 // bump version number
-/** 
+/**
  * Bump the version
  * --type=pre will bump the prerelease version *.*.*-x
  * --type=patch or no flag will bump the patch version *.*.x
@@ -228,6 +228,10 @@ gulp.task('serve-build', ['optimize'], function(){
     // inject = injects <!-- inject:css --><!-- endinject -->
 gulp.task('serve-dev', ['inject'], function() {
     serve(true);
+});
+
+gulp.task('test', ['vet', 'templatecache'], function() {
+    startTests(true /* singleRun */, done);
 });
 
 //////////////
@@ -321,7 +325,31 @@ function startBrowserSync(isDev) {
     }
 
     browserSync(options);
+}
 
+// testing
+function startTests(singleRun, done) {
+    var karma = require('require').server;
+    var excludeFiles = [];
+    var serverSpecs = config.serverIntegrationSpecs;
+
+    excludeFiles = serverSpecs;
+
+    karma.start({
+        configFile: __dirname + '/karma.conf.js',
+        exclude: excludeFiles,
+        singleRun: !!singleRun
+    }, karmaCompleted);
+
+    function karmaCompleted(karmaResult) {
+        log('Karma completed!');
+
+        if (karmaResult === 1) {
+            done('karma: tests failed with the code ' + karmaResult);
+        } else {
+            done();
+        }
+    }
 }
 
 
