@@ -155,6 +155,38 @@ gulp.task('build', ['optimize', 'images', 'fonts'], function() {
     notify(msg);
 });
 
+// serve specs
+gulp.task('serve-specs', ['build-specs'], function(done){
+    log('Run the spec runner');
+    serve(true /* isDev */, true /* specRunner */); // serves specs.html
+    done();
+});
+
+// GUI for Mocha tests
+gulp.task('build-specs', ['templatecache'], function() {
+    log('building the spec runner');
+
+    var wiredep = require('wiredep').stream;
+    var options = config.getWiredepDefaultOptions();
+    var specs = config.specs;
+
+    options.devDependencies = true;
+
+    if (args.startServers) {
+        specs = [].concat(specs, config.serverIntegrationSpecs);
+    }
+
+    return gulp
+        .src(config.specRunner)
+        .pipe(wiredep(options))
+        .pipe($.inject(gulp.src(config.testlibraries, {name: 'inject:testlibraries', read: false}))) // removed read: false
+        .pipe($.inject(gulp.src(config.js)))
+        .pipe($.inject(gulp.src(config.specHelpers, {name: 'inject:spechelpers', read: false}))) // removed read: false
+        .pipe($.inject(gulp.src(specs, {name: 'inject:specs', read: false}))) // removed read: false
+        .pipe($.inject(gulp.src(config.temp + config.templateCache.file, {name: 'inject:templates', read: false}))) // removed read: false
+        .pipe(gulp.dest(config.client))
+});
+
 // Build Pipeline, injects lib and app both css and js between: \
     // inject = injects <!-- inject:css --><!-- endinject -->
 
@@ -257,7 +289,7 @@ gulp.task('autotest', ['vet', 'templatecache'], function(done){
 
 //////////////
 
-function serve(isDev) {
+function serve(isDev, specRunner) {
     var nodeOptions = {
         script: config.nodeServer, // path to src/server/app.js
         delayTime: 1,
@@ -283,7 +315,7 @@ function serve(isDev) {
         })
         .on('start', function() {
             log('** nodemon started **');
-            startBrowserSync(isDev);
+            startBrowserSync(isDev, specRunner);
         })
         .on('crash', function() {
             log('** nodemon crashed **');
@@ -310,7 +342,7 @@ function notify(options) {
     notifier.notify(notifyOptions);
 }
 
-function startBrowserSync(isDev) {
+function startBrowserSync(isDev, specRunner) {
     // check to see if already running
     // if pass in --nosync as arg, then returns
     // ex; $ gulp serve-dev --nosync
@@ -355,6 +387,10 @@ function startBrowserSync(isDev) {
         notify: true,
         reloadDelay: 0
     };
+
+    if (specRunner) {
+        options.startPath = config.specRunnerFile; // use specs.html instead of index.html
+    }
 
     browserSync(options);
 }
